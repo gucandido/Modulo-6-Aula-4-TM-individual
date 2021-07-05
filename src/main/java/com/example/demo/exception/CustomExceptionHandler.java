@@ -16,11 +16,9 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(LinkNotFound.class)
     public ResponseEntity<ExceptionDto> defaultHandler(LinkNotFound e){
-
         ExceptionDto ex = new ExceptionDto(e.getMessage());
         ex.setStack(e.getStackTrace().toString());
         return ResponseEntity.badRequest().body(ex);
-
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -29,6 +27,20 @@ public class CustomExceptionHandler {
         List<FieldError> fieldErrors = result.getFieldErrors();
         List<ExceptionDto> processFieldErrors = processFieldErrors(fieldErrors);
         return ResponseEntity.badRequest().body(processFieldErrors);
+    }
+
+    @ExceptionHandler(InvalidationLink.class)
+    public ResponseEntity<ExceptionDto> defaultHandler(InvalidationLink e){
+        ExceptionDto ex = new ExceptionDto(e.getMessage());
+        ex.setStack(e.getStackTrace().toString());
+        return ResponseEntity.badRequest().body(ex);
+    }
+
+    @ExceptionHandler(SenhaIncorreta.class)
+    public ResponseEntity<ExceptionDto> defaultHandler(SenhaIncorreta e){
+        ExceptionDto ex = new ExceptionDto(e.getMessage());
+        ex.setStack(e.getStackTrace().toString());
+        return ResponseEntity.badRequest().body(ex);
     }
 
     private List<ExceptionDto> processFieldErrors(List<FieldError> fieldErrors) {

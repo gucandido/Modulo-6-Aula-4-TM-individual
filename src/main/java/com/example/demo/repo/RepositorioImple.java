@@ -2,7 +2,9 @@ package com.example.demo.repo;
 
 import com.example.demo.dto.LinkDto;
 import com.example.demo.dto.MetricsDto;
+import com.example.demo.exception.InvalidationLink;
 import com.example.demo.exception.LinkNotFound;
+import com.example.demo.exception.SenhaIncorreta;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -27,18 +29,32 @@ public class RepositorioImple implements Repositorio{
     }
 
     @Override
-    public LinkDto readLinkById(Integer id) throws LinkNotFound {
+    public LinkDto readLinkById(Integer id, String senha) throws LinkNotFound, InvalidationLink, SenhaIncorreta {
 
         LinkDto l = staticDb.get(id);
         if(l != null) {
-            MetricsDto m = staticMetrics.get(id);
 
-            if (m == null)
-                staticMetrics.put(id, new MetricsDto(0));
+            if(l.isValido()) {
 
-            staticMetrics.get(id).addVisita();
+                if(l.validarSenha(senha)){
 
-            return staticDb.get(id);
+                    MetricsDto m = staticMetrics.get(id);
+
+                    if (m == null)
+                        staticMetrics.put(id, new MetricsDto(0));
+
+                    staticMetrics.get(id).addVisita();
+
+                    return staticDb.get(id);
+
+                }else{
+                    throw new SenhaIncorreta("Senha inválida!");
+                }
+
+            }else{
+                throw new InvalidationLink("Este link não está ativo!");
+            }
+
         }else{
             throw new LinkNotFound("Link não cadastrado no sistema!");
         }
@@ -57,19 +73,77 @@ public class RepositorioImple implements Repositorio{
     }
 
     @Override
-    public MetricsDto readMetricsById(Integer id) throws LinkNotFound {
+    public MetricsDto readMetricsById(Integer id, String senha) throws LinkNotFound, SenhaIncorreta {
 
-        if(staticMetrics.get(id) == null)
+        LinkDto link = staticDb.get(id);
+
+        if(staticMetrics.get(id) == null) {
             throw new LinkNotFound("Link não cadastrado no sistema, portanto não há métricas de acesso!");
-        else
-            return staticMetrics.get(id);
+        }else{
+            if(link.validarSenha(senha)){
+                return staticMetrics.get(id);
+            }else{
+                throw new SenhaIncorreta("Senha inválida!");
+            }
+        }
+
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Integer id, String senha) throws LinkNotFound, SenhaIncorreta{
 
-        staticDb.remove(id);
+        LinkDto l = staticDb.get(id);
+        if(l != null) {
 
+            if(l.validarSenha(senha)){
+                staticDb.remove(id);
+            }else{
+                throw new SenhaIncorreta("Senha inválida!");
+            }
+
+
+        }else{
+            throw new LinkNotFound("Link não cadastrado no sistema!");
+        }
+
+
+    }
+
+    @Override
+    public String invalidateLinkById(Integer id, String senha) throws LinkNotFound, SenhaIncorreta {
+
+        LinkDto l = staticDb.get(id);
+        if(l != null) {
+
+            if(l.validarSenha(senha)){
+                staticDb.get(id).setValido(false);
+
+                return "Site invalidado com sucesso!";
+            }else{
+                throw new SenhaIncorreta("Senha inválida!");
+            }
+
+        }else{
+            throw new LinkNotFound("Link não cadastrado no sistema!");
+        }
+
+    }
+
+    @Override
+    public String validateLinkById(Integer id, String senha) throws LinkNotFound, SenhaIncorreta {
+        LinkDto l = staticDb.get(id);
+        if(l != null) {
+            if(l.validarSenha(senha)){
+                staticDb.get(id).setValido(true);
+
+                return "Site validado com sucesso!";
+            }else{
+                throw new SenhaIncorreta("Senha inválida!");
+            }
+
+        }else{
+            throw new LinkNotFound("Link não cadastrado no sistema!");
+        }
     }
 
 }
